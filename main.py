@@ -126,8 +126,8 @@ def reply_handler(bot, update):
     chatgpt = ChatGPT()
 
     text = update.message.text
-
-    if text == '/new':
+    print('meg is %s' % text)
+    if text == '::new':
         update.message.reply_text('new chat.')
     else:
         chatgpt.prompt.add_msg(text)  # 人類的問題 the question humans asked
