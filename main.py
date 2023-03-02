@@ -12,9 +12,6 @@ from telegram.ext import Dispatcher, MessageHandler, Filters
 import openai
 	
 openai.api_key = os.getenv("OPENAI_API_KEY") 
-
-
-chat_language = os.getenv("INIT_LANGUAGE", default = "zh") #amend here to change your preset language
 	
 MSG_LIST_LIMIT = int(os.getenv("MSG_LIST_LIMIT", default = 20))
 LANGUAGE_TABLE = {
@@ -27,7 +24,6 @@ LANGUAGE_TABLE = {
 class Prompts:
     def __init__(self):
         self.msg_list = []
-        self.msg_list.append(f"AI:{LANGUAGE_TABLE[chat_language]}")
 	    
     def add_msg(self, new_msg):
         if len(self.msg_list) >= MSG_LIST_LIMIT:
