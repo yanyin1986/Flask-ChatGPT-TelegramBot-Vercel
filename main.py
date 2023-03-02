@@ -61,15 +61,19 @@ class ChatGPT:
         self.temperature = float(os.getenv("OPENAI_TEMPERATURE", default=0))
         self.frequency_penalty = float(os.getenv("OPENAI_FREQUENCY_PENALTY", default=0))
         self.presence_penalty = float(os.getenv("OPENAI_PRESENCE_PENALTY", default=0.6))
-        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS", default=240))  # You can change here to decide the characer number AI gave you.
+        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS",
+                                        default=240))  # You can change here to decide the characer number AI gave you.
 
     def get_response(self):
         # openai.ChatCompletion.create(
         #     model=self.model
         # )
+        generate_messages = self.messages.generate_messages()
+        print("messages -> ")
+        print(generate_messages)
         response = openai.ChatCompletion.create(
             model=self.model,
-            messages=self.messages.generate_messages(),
+            messages=generate_messages,
             temperature=self.temperature,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
@@ -77,12 +81,13 @@ class ChatGPT:
         )
 
         print("AI回答內容(The direct answer that AI gave you)：")
-        print(response['choices'][0]['text'].strip())
+        print(response)
+        print(response['choices'][0]['message']['content'].strip())
 
         print("AI原始回覆資料內容(The original answer that AI gave you)：")
         print(response)
 
-        resp = response['choices'][0]['text'].strip()
+        resp = response['choices'][0]['message']['content'].strip()
         self.messages.add_assistant_msg(resp)
         return resp
 
@@ -109,6 +114,8 @@ app = Flask(__name__)
 # Initial bot by Telegram access token
 bot = telegram.Bot(token=telegram_bot_token)
 
+chatgpt = ChatGPT()
+
 
 @app.route('/callback', methods=['POST'])
 def webhook_handler():
@@ -133,7 +140,10 @@ def reply():
     if msg == '':
         return 'error'
 
-    chatgpt = ChatGPT()
+    if msg == '::new':
+        chatgpt.messages.msg_list.clear()
+        return 'cleared'
+
     chatgpt.messages.add_msg(msg)
     ai_reply_response = chatgpt.get_response()
     return ai_reply_response
@@ -143,8 +153,6 @@ def reply_handler(bot, update):
     """Reply message."""
     # text = update.message.text
     # update.message.reply_text(text)
-    chatgpt = ChatGPT()
-
     text = update.message.text
     print('meg is %s' % text)
     if text == '::new':
