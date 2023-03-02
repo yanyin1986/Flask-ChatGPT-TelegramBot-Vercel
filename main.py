@@ -85,10 +85,10 @@ class ChatGPT:
         print("AI回答內容(The direct answer that AI gave you)：")
         result = ''
         for resp in response:
-            msg = resp["choices"][0]["message"]
-            print(msg)
-            result += msg['content'].strip()
-
+            print(resp)
+            delta = resp['choices'][0]['delta']
+            if 'content' in delta:
+                result += delta['content']
         print("AI原始回覆資料內容(The original answer that AI gave you)：")
         print(result)
 
