@@ -109,6 +109,21 @@ def webhook_handler():
     return 'ok'
 
 
+@app.route('/health_check', methods=['GET'])
+def health_check():
+    return 'ok'
+
+
+@app.route('/reply', methods=['GET'])
+def reply():
+    msg = request.get('prompt')
+    chatgpt = ChatGPT()  
+    
+    chatgpt.prompt.add_msg(msg) 
+    ai_reply_response = chatgpt.get_response()
+    return ai_reply_response
+    
+
 def reply_handler(bot, update):
     """Reply message."""
     #text = update.message.text
@@ -119,6 +134,7 @@ def reply_handler(bot, update):
     ai_reply_response = chatgpt.get_response() #ChatGPT產生的回答 the answers that ChatGPT gave
     
     update.message.reply_text(ai_reply_response) #用AI的文字回傳 reply the text that AI made
+
 
 # New a dispatcher for bot
 dispatcher = Dispatcher(bot, None)
