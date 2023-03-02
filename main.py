@@ -83,6 +83,7 @@ class ChatGPT:
 
         print("AI回答內容(The direct answer that AI gave you)：")
         print(response)
+        print(type(response).__name__)
         print(response['choices'][0]['message']['content'].strip())
 
         print("AI原始回覆資料內容(The original answer that AI gave you)：")
