@@ -46,9 +46,9 @@ class ChatGPT:
                                         default=240))  # You can change here to decide the characer number AI gave you.
 
     def get_response(self):
-        openai.ChatCompletion.create(
-            model=self.model
-        )
+        # openai.ChatCompletion.create(
+        #     model=self.model
+        # )
         response = openai.Completion.create(
             model=self.model,
             prompt=self.prompt.generate_prompt(),
