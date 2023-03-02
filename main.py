@@ -93,7 +93,7 @@ class ChatGPT:
         print(result)
 
         self.messages.add_assistant_msg(result)
-        return result
+        return result.lstrip()
 
     def add_msg(self, text):
         self.messages.add_msg(text)
