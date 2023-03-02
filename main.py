@@ -35,23 +35,41 @@ class Prompts:
         return '\n'.join(self.msg_list)
 
 
+class Messages:
+    def __init__(self):
+        self.msg_list = []
+
+    def add_msg(self, new_msg):
+        if len(self.msg_list) >= MSG_LIST_LIMIT:
+            self.msg_list.pop(0)
+        self.msg_list.append({"role": "user", "content": new_msg})
+
+    def add_assistant_msg(self, new_msg):
+        if len(self.msg_list) >= MSG_LIST_LIMIT:
+            self.msg_list.pop(0)
+        self.msg_list.append({"role": "assistant", "content": new_msg})
+
+    def generate_messages(self):
+        return self.msg_list
+
+
 class ChatGPT:
     def __init__(self):
-        self.prompt = Prompts()
+        # self.prompt = Prompts()
+        self.messages = Messages()
         self.model = os.getenv("OPENAI_MODEL", default="text-davinci-003")
         self.temperature = float(os.getenv("OPENAI_TEMPERATURE", default=0))
         self.frequency_penalty = float(os.getenv("OPENAI_FREQUENCY_PENALTY", default=0))
         self.presence_penalty = float(os.getenv("OPENAI_PRESENCE_PENALTY", default=0.6))
-        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS",
-                                        default=240))  # You can change here to decide the characer number AI gave you.
+        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS", default=240))  # You can change here to decide the characer number AI gave you.
 
     def get_response(self):
         # openai.ChatCompletion.create(
         #     model=self.model
         # )
-        response = openai.Completion.create(
+        response = openai.ChatCompletion.create(
             model=self.model,
-            prompt=self.prompt.generate_prompt(),
+            messages=self.messages.generate_messages(),
             temperature=self.temperature,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
@@ -64,10 +82,12 @@ class ChatGPT:
         print("AI原始回覆資料內容(The original answer that AI gave you)：")
         print(response)
 
-        return response['choices'][0]['text'].strip()
+        resp = response['choices'][0]['text'].strip()
+        self.messages.add_assistant_msg(resp)
+        return resp
 
     def add_msg(self, text):
-        self.prompt.add_msg(text)
+        self.messages.add_msg(text)
 
 
 #####################
@@ -114,7 +134,7 @@ def reply():
         return 'error'
 
     chatgpt = ChatGPT()
-    chatgpt.prompt.add_msg(msg)
+    chatgpt.messages.add_msg(msg)
     ai_reply_response = chatgpt.get_response()
     return ai_reply_response
 
@@ -129,8 +149,9 @@ def reply_handler(bot, update):
     print('meg is %s' % text)
     if text == '::new':
         update.message.reply_text('new chat.')
+        chatgpt.messages.msg_list.clear()
     else:
-        chatgpt.prompt.add_msg(text)  # 人類的問題 the question humans asked
+        chatgpt.messages.add_msg(text)  # 人類的問題 the question humans asked
         ai_reply_response = chatgpt.get_response()  # ChatGPT產生的回答 the answers that ChatGPT gave
         update.message.reply_text(ai_reply_response)  # 用AI的文字回傳 reply the text that AI made
 
