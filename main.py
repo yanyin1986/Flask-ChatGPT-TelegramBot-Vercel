@@ -77,7 +77,8 @@ class ChatGPT:
             temperature=self.temperature,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
-            max_tokens=self.max_tokens
+            max_tokens=self.max_tokens,
+            stream=True
         )
 
         print("AI回答內容(The direct answer that AI gave you)：")
