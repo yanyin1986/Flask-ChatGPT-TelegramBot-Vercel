@@ -6,80 +6,77 @@ import telegram, os
 from flask import Flask, request
 from telegram.ext import Dispatcher, MessageHandler, Filters
 
-
-
 #################
 import openai
-	
-openai.api_key = os.getenv("OPENAI_API_KEY") 
-	
-MSG_LIST_LIMIT = int(os.getenv("MSG_LIST_LIMIT", default = 20))
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+MSG_LIST_LIMIT = int(os.getenv("MSG_LIST_LIMIT", default=20))
 LANGUAGE_TABLE = {
-	  "zh": "哈囉！",
-	  "en": "Hello!",
-      "jp": "こんにちは"
-	}
+    "zh": "哈囉！",
+    "en": "Hello!",
+    "jp": "こんにちは"
+}
 
 
 class Prompts:
     def __init__(self):
         self.msg_list = []
-	    
+
     def add_msg(self, new_msg):
         if len(self.msg_list) >= MSG_LIST_LIMIT:
             self.remove_msg()
         self.msg_list.append(new_msg)
-	
+
     def remove_msg(self):
         self.msg_list.pop(0)
-	
+
     def generate_prompt(self):
-        return '\n'.join(self.msg_list)	
-	
-class ChatGPT:  
+        return '\n'.join(self.msg_list)
+
+
+class ChatGPT:
     def __init__(self):
         self.prompt = Prompts()
-        self.model = os.getenv("OPENAI_MODEL", default = "text-davinci-003")
-        self.temperature = float(os.getenv("OPENAI_TEMPERATURE", default = 0))
-        self.frequency_penalty = float(os.getenv("OPENAI_FREQUENCY_PENALTY", default = 0))
-        self.presence_penalty = float(os.getenv("OPENAI_PRESENCE_PENALTY", default = 0.6))
-        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS", default = 240)) #You can change here to decide the characer number AI gave you.
-	
+        self.model = os.getenv("OPENAI_MODEL", default="text-davinci-003")
+        self.temperature = float(os.getenv("OPENAI_TEMPERATURE", default=0))
+        self.frequency_penalty = float(os.getenv("OPENAI_FREQUENCY_PENALTY", default=0))
+        self.presence_penalty = float(os.getenv("OPENAI_PRESENCE_PENALTY", default=0.6))
+        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS",
+                                        default=240))  # You can change here to decide the characer number AI gave you.
+
     def get_response(self):
+        openai.ChatCompletion.create(
+            model=self.model
+        )
         response = openai.Completion.create(
-	            model=self.model,
-	            prompt=self.prompt.generate_prompt(),
-	            temperature=self.temperature,
-	            frequency_penalty=self.frequency_penalty,
-	            presence_penalty=self.presence_penalty,
-	            max_tokens=self.max_tokens
-                )
-        
-        print("AI回答內容(The direct answer that AI gave you)：")        
+            model=self.model,
+            prompt=self.prompt.generate_prompt(),
+            temperature=self.temperature,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
+            max_tokens=self.max_tokens
+        )
+
+        print("AI回答內容(The direct answer that AI gave you)：")
         print(response['choices'][0]['text'].strip())
 
-        print("AI原始回覆資料內容(The original answer that AI gave you)：")      
+        print("AI原始回覆資料內容(The original answer that AI gave you)：")
         print(response)
-        
+
         return response['choices'][0]['text'].strip()
-	
+
     def add_msg(self, text):
         self.prompt.add_msg(text)
-
-
-
-
 
 
 #####################
 
 telegram_bot_token = str(os.getenv("TELEGRAM_BOT_TOKEN"))
 
-
-
 # Load data from config.ini file
-#config = configparser.ConfigParser()
-#config.read('config.ini')
+# config = configparser.ConfigParser()
+# config.read('config.ini')
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -91,7 +88,6 @@ app = Flask(__name__)
 
 # Initial bot by Telegram access token
 bot = telegram.Bot(token=telegram_bot_token)
-
 
 
 @app.route('/callback', methods=['POST'])
@@ -118,21 +114,25 @@ def reply():
         return 'error'
 
     chatgpt = ChatGPT()
-    chatgpt.prompt.add_msg(msg) 
+    chatgpt.prompt.add_msg(msg)
     ai_reply_response = chatgpt.get_response()
     return ai_reply_response
-    
+
 
 def reply_handler(bot, update):
     """Reply message."""
-    #text = update.message.text
-    #update.message.reply_text(text)
-    chatgpt = ChatGPT()        
-    
-    chatgpt.prompt.add_msg(update.message.text) #人類的問題 the question humans asked
-    ai_reply_response = chatgpt.get_response() #ChatGPT產生的回答 the answers that ChatGPT gave
-    
-    update.message.reply_text(ai_reply_response) #用AI的文字回傳 reply the text that AI made
+    # text = update.message.text
+    # update.message.reply_text(text)
+    chatgpt = ChatGPT()
+
+    text = update.message.text
+
+    if text == '/new':
+        update.message.reply_text('new chat.')
+    else:
+        chatgpt.prompt.add_msg(text)  # 人類的問題 the question humans asked
+        ai_reply_response = chatgpt.get_response()  # ChatGPT產生的回答 the answers that ChatGPT gave
+        update.message.reply_text(ai_reply_response)  # 用AI的文字回傳 reply the text that AI made
 
 
 # New a dispatcher for bot
