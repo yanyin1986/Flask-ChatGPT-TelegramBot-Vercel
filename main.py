@@ -81,17 +81,19 @@ class ChatGPT:
             stream=True
         )
 
-        print("AI回答內容(The direct answer that AI gave you)：")
         print(response)
-        print(type(response).__name__)
-        print(response['choices'][0]['message']['content'].strip())
+        print("AI回答內容(The direct answer that AI gave you)：")
+        result = ''
+        for resp in response:
+            msg = resp["choices"][0]["message"]
+            print(msg)
+            result += msg['content'].strip()
 
         print("AI原始回覆資料內容(The original answer that AI gave you)：")
-        print(response)
+        print(result)
 
-        resp = response['choices'][0]['message']['content'].strip()
-        self.messages.add_assistant_msg(resp)
-        return resp
+        self.messages.add_assistant_msg(result)
+        return result
 
     def add_msg(self, text):
         self.messages.add_msg(text)
