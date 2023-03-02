@@ -111,14 +111,17 @@ def webhook_handler():
 
 @app.route('/health_check', methods=['GET'])
 def health_check():
+    """health check"""
     return 'ok'
 
 
 @app.route('/reply', methods=['GET'])
 def reply():
-    msg = request.get('prompt')
-    chatgpt = ChatGPT()  
-    
+    msg = request.args.get('prompt', default='', type=str)
+    if msg == '':
+        return 'error'
+
+    chatgpt = ChatGPT()
     chatgpt.prompt.add_msg(msg) 
     ai_reply_response = chatgpt.get_response()
     return ai_reply_response
